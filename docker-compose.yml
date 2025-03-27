@@ -1,0 +1,24 @@
+services:
+  server:
+    build: .
+    ports:
+      - "3001:3000"
+    environment:
+      - PORT=3000
+  client:
+    build: .
+    command: node client.js
+    environment:
+      - SERVER_URL=http://server:3000
+    depends_on:
+      - server
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3002:3000"
