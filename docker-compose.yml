@@ -22,3 +22,9 @@ services:
     image: grafana/grafana
     ports:
       - "3002:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  grafana_data:
+

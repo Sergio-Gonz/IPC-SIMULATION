@@ -16,3 +16,7 @@ socket.on('mensaje', (data) => {
 socket.on('disconnect', () => {
   console.log('Cliente desconectado');
 });
+
+socket.on('connect_error', (error) => {
+  console.log('Error de conexión:', error);
+});
