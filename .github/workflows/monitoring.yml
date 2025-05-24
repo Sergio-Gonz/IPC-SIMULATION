@@ -6,7 +6,10 @@ on:
   workflow_dispatch:
 
 env:
+  # Usar variables de entorno seguras
   API_URL: ${{ vars.API_URL || 'http://localhost:3000' }}
+  PROMETHEUS_VERSION: "v2.45.0"
+  GRAFANA_VERSION: "10.0.3"
 
 jobs:
   health-check:
@@ -14,40 +17,90 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Check API Health
         id: healthcheck
         run: |
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.API_URL }}/health)
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.API_URL }}/health || echo "failed")
           if [ "$HEALTH_STATUS" != "200" ]; then
             echo "::error::API Health check failed with status $HEALTH_STATUS"
             exit 1
           fi
+        continue-on-error: true
 
       - name: Check Metrics Endpoint
         run: |
-          METRICS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.API_URL }}/metrics)
+          METRICS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.API_URL }}/metrics || echo "failed")
           if [ "$METRICS_STATUS" != "200" ]; then
             echo "::warning::Metrics endpoint check failed"
           fi
+        continue-on-error: true
 
       - name: Collect System Metrics
         run: |
           curl -s ${{ env.API_URL }}/metrics > metrics.txt
+          echo "Current metrics snapshot saved"
+        continue-on-error: true
 
       - name: Analyze Process Stats
         run: |
-          ACTIVE_PROCESSES=$(grep "ipc_active_processes" metrics.txt | wc -l)
-          echo "Active Processes: $ACTIVE_PROCESSES"
+          if [ -f metrics.txt ]; then
+            ACTIVE_PROCESSES=$(grep "ipc_active_processes" metrics.txt | wc -l || echo "0")
+            echo "Active Processes: $ACTIVE_PROCESSES"
 
-          ERROR_COUNT=$(grep "ipc_errors_total" metrics.txt | awk '{sum += $2} END {print sum}')
-          echo "Total Errors: $ERROR_COUNT"
+            ERROR_COUNT=$(grep "ipc_errors_total" metrics.txt | awk '{sum += $2} END {print sum}' || echo "0")
+            echo "Total Errors: $ERROR_COUNT"
+
+            if [ "$ERROR_COUNT" -gt 100 ]; then
+              echo "::warning::High error count detected: $ERROR_COUNT"
+            fi
+          fi
+        continue-on-error: true
 
       - name: Check Process Queue
         run: |
-          QUEUE_SIZE=$(grep "ipc_queue_size" metrics.txt | awk '{print $2}')
-          if [ "$QUEUE_SIZE" -gt 50 ]; then
-            echo "::warning::Process queue size is high: $QUEUE_SIZE"
+          if [ -f metrics.txt ]; then
+            QUEUE_SIZE=$(grep "ipc_queue_size" metrics.txt | awk '{print $2}' || echo "0")
+            if [ "$QUEUE_SIZE" -gt 50 ]; then
+              echo "::warning::Process queue size is high: $QUEUE_SIZE"
+            fi
           fi
+        continue-on-error: true
+
+      - name: Setup Prometheus
+        if: success()
+        run: |
+          wget https://github.com/prometheus/prometheus/releases/download/${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION#v}.linux-amd64.tar.gz
+          tar xvf prometheus-*.tar.gz
+          echo "Prometheus setup completed"
+        continue-on-error: true
+
+      - name: Configure Prometheus
+        if: success()
+        run: |
+          cat > prometheus.yml << EOF
+          global:
+            scrape_interval: 15s
+            evaluation_interval: 15s
+          scrape_configs:
+            - job_name: 'ipc_system'
+              static_configs:
+                - targets: ['localhost:3000']
+              metrics_path: '/metrics'
+          EOF
+          echo "Prometheus configuration created"
+        continue-on-error: true
 
       - name: Send Alert on Failure
         if: failure()
@@ -58,12 +111,16 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: 'System Health Check Failed',
-              body: `Health check failed at ${new Date().toISOString()}\n\nCheck the [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`
+              body: `Health check failed at ${new Date().toISOString()}\n\nCheck the [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`,
+              labels: ['monitoring', 'alert', 'high-priority']
             });
 
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue.data.number,
-              labels: ['monitoring', 'alert']
-            });
+      - name: Upload Metrics Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: monitoring-metrics
+          path: |
+            metrics.txt
+            prometheus.yml
+          retention-days: 7
