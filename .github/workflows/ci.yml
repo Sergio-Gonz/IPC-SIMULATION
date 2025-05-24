@@ -10,6 +10,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  NODE_ENV: test
+  PORT: 3000
 
 jobs:
   quality:
@@ -36,6 +38,13 @@ jobs:
         run: npm test
         env:
           NODE_ENV: test
+
+      - name: Verify application startup
+        run: |
+          npm start &
+          sleep 5
+          curl http://localhost:3000/health
+          kill %1
 
   security:
     name: Security Scan
@@ -97,6 +106,12 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Test Docker image
+        run: |
+          docker run -d -p 3000:3000 ${{ steps.meta.outputs.tags }}
+          sleep 5
+          curl http://localhost:3000/health
 
   deploy:
     name: Deploy to Environment
