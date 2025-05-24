@@ -7,7 +7,7 @@ on:
 
 env:
   # Usar variables de entorno seguras
-  API_URL: ${{ vars.API_URL || 'http://localhost:3000' }}
+  API_URL: http://localhost:3000
   PROMETHEUS_VERSION: "v2.45.0"
   GRAFANA_VERSION: "10.0.3"
 
@@ -29,15 +29,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Start server
+        run: |
+          npm start &
+          sleep 10
+
       - name: Check API Health
         id: healthcheck
         run: |
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.API_URL }}/health || echo "failed")
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health || echo "failed")
           if [ "$HEALTH_STATUS" != "200" ]; then
             echo "::error::API Health check failed with status $HEALTH_STATUS"
             exit 1
           fi
-        continue-on-error: true
+
+      - name: Cleanup
+        if: always()
+        run: |
+          kill $(lsof -t -i:3000) || true
 
       - name: Check Metrics Endpoint
         run: |
