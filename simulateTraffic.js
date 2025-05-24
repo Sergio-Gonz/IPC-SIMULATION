@@ -1,8 +1,8 @@
 const io = require('socket.io-client');
 
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3001';
-// Prueba con un número menor inicialmente, por ejemplo, 100
-const NUM_CLIENTS = 100; 
+const SERVER_URL = 'http://localhost:3000';
+// Prueba con un número menor inicialmente
+const NUM_CLIENTS = 10; 
 const clients = [];
 
 for (let i = 0; i < NUM_CLIENTS; i++) {

@@ -1,0 +1,69 @@
+name: System Monitoring
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # Cada 15 minutos
+  workflow_dispatch:
+
+env:
+  API_URL: ${{ vars.API_URL || 'http://localhost:3000' }}
+
+jobs:
+  health-check:
+    name: System Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check API Health
+        id: healthcheck
+        run: |
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.API_URL }}/health)
+          if [ "$HEALTH_STATUS" != "200" ]; then
+            echo "::error::API Health check failed with status $HEALTH_STATUS"
+            exit 1
+          fi
+
+      - name: Check Metrics Endpoint
+        run: |
+          METRICS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.API_URL }}/metrics)
+          if [ "$METRICS_STATUS" != "200" ]; then
+            echo "::warning::Metrics endpoint check failed"
+          fi
+
+      - name: Collect System Metrics
+        run: |
+          curl -s ${{ env.API_URL }}/metrics > metrics.txt
+
+      - name: Analyze Process Stats
+        run: |
+          ACTIVE_PROCESSES=$(grep "ipc_active_processes" metrics.txt | wc -l)
+          echo "Active Processes: $ACTIVE_PROCESSES"
+
+          ERROR_COUNT=$(grep "ipc_errors_total" metrics.txt | awk '{sum += $2} END {print sum}')
+          echo "Total Errors: $ERROR_COUNT"
+
+      - name: Check Process Queue
+        run: |
+          QUEUE_SIZE=$(grep "ipc_queue_size" metrics.txt | awk '{print $2}')
+          if [ "$QUEUE_SIZE" -gt 50 ]; then
+            echo "::warning::Process queue size is high: $QUEUE_SIZE"
+          fi
+
+      - name: Send Alert on Failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'System Health Check Failed',
+              body: `Health check failed at ${new Date().toISOString()}\n\nCheck the [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`
+            });
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.data.number,
+              labels: ['monitoring', 'alert']
+            });
