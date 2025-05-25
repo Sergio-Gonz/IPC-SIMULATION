@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Instalar dependencias
-RUN npm ci
+RUN npm install
 
 # Copiar el resto del código
 COPY . .
@@ -27,7 +27,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Instalar solo dependencias de producción
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copiar el código construido
 COPY --from=builder /usr/src/app/src ./src
