@@ -10,6 +10,7 @@ Sistema de simulación de comunicación entre procesos (IPC) con control de acce
 - 🔄 Gestión de procesos en tiempo real
 - 📝 Logging estructurado
 - ⚡ Rate limiting y control de carga
+- 🐳 Contenerización con Docker
 
 ## 🛠️ Tecnologías
 
@@ -19,13 +20,56 @@ Sistema de simulación de comunicación entre procesos (IPC) con control de acce
 - Prometheus
 - JWT
 - Jest
+- Docker
 
 ## 📋 Requisitos Previos
 
 - Node.js >= 14.x
 - npm >= 6.x
+- Docker >= 20.10.x
+- Docker Compose >= 2.0.x
 
-## 🔧 Instalación
+## 🐳 Ejecución con Docker
+
+### Usando Docker Compose (Recomendado)
+
+1. Construir y levantar todos los servicios:
+
+   ```bash
+   docker compose up --build
+   ```
+
+2. Acceder a los servicios:
+   - API: http://localhost:3000
+   - Prometheus: http://localhost:9090
+   - Grafana: http://localhost:3001 (usuario: admin, contraseña: admin)
+
+### Usando Docker manualmente
+
+1. Construir la imagen:
+
+   ```bash
+   docker build -t ipc-server .
+   ```
+
+2. Ejecutar el contenedor:
+   ```bash
+   docker run -p 3000:3000 ipc-server
+   ```
+
+### Servicios Disponibles
+
+- **IPC Server**: API principal y WebSocket server
+- **Prometheus**: Recolección de métricas
+- **Grafana**: Visualización de métricas y dashboards
+
+### Volúmenes Persistentes
+
+- `prometheus-data`: Almacena datos históricos de métricas
+- `grafana-data`: Almacena configuración y dashboards de Grafana
+- `./logs`: Almacena logs de la aplicación
+
+## 🔧 Instalación Local
 
 1. Clonar el repositorio:
 
