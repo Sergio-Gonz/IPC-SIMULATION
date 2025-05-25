@@ -7,8 +7,8 @@ WORKDIR /usr/src/app
 # Copiar archivos de dependencias
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm install
+# Instalar todas las dependencias (incluyendo devDependencies)
+RUN npm install --include=dev
 
 # Copiar el resto del código
 COPY . .
@@ -26,8 +26,8 @@ WORKDIR /usr/src/app
 # Copiar archivos de dependencias
 COPY package*.json ./
 
-# Instalar solo dependencias de producción
-RUN npm install --omit=dev
+# Instalar solo dependencias de producción sin ejecutar scripts
+RUN npm install --omit=dev --ignore-scripts
 
 # Copiar el código construido
 COPY --from=builder /usr/src/app/src ./src
