@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Ejecutar linter
+npm run lint || exit 1
+
+# Verificar formato del código
+npm run format:check || exit 1
+
+# Ejecutar pruebas unitarias
+npm run test || exit 1 

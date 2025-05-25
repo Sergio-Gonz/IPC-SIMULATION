@@ -1,78 +1,102 @@
-# Simulación de IPC (Comunicación Entre Procesos)
+# Sistema de Simulación IPC
 
-Este proyecto implementa un sistema de simulación de IPC con las siguientes características:
+Sistema de simulación de comunicación entre procesos (IPC) con control de acceso por roles, métricas y monitoreo en tiempo real.
 
-## Características Principales
+## 🚀 Características
 
-- Sistema cliente-servidor usando Socket.IO
-- Sistema de roles (admin, operator, viewer)
-- Monitoreo con Prometheus y métricas personalizadas
-- Gestión de procesos con ProcessManager
-- Recolección de métricas con MetricsCollector
-- Endpoints de monitoreo (/health, /metrics, /status/detailed)
+- ✅ Simulación de IPC con WebSockets
+- 🔐 Control de acceso basado en roles (RBAC)
+- 📊 Métricas Prometheus
+- 🔄 Gestión de procesos en tiempo real
+- 📝 Logging estructurado
+- ⚡ Rate limiting y control de carga
 
-## Requisitos
+## 🛠️ Tecnologías
 
-- Node.js v20 o superior
-- npm v8 o superior
+- Node.js
+- Express
+- Socket.IO
+- Prometheus
+- JWT
+- Jest
 
-## Instalación
+## 📋 Requisitos Previos
+
+- Node.js >= 14.x
+- npm >= 6.x
+
+## 🔧 Instalación
+
+1. Clonar el repositorio:
+
+   ```bash
+   git clone https://github.com/Sergio-Gonz/IPC-SIMULATION.git
+   cd IPC-SIMULATION
+   ```
+
+2. Instalar dependencias:
+
+   ```bash
+   npm install
+   ```
+
+3. Configurar variables de entorno:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Iniciar el servidor:
+   ```bash
+   npm run dev
+   ```
+
+## 📚 Documentación
+
+- [Arquitectura del Sistema](ARQUITECTURA.md)
+- [Documentación de API](API.md)
+
+## 🧪 Tests
 
 ```bash
-# Clonar el repositorio
-git clone [URL_DEL_REPOSITORIO]
-
-# Instalar dependencias
-npm install
-
-# Configurar variables de entorno
-cp .env.example .env
-```
-
-## Uso
-
-```bash
-# Iniciar el servidor
-npm start
-
-# Ejecutar en modo desarrollo
-npm run dev
-
-# Ejecutar pruebas
 npm test
-
-# Ejecutar linter
-npm run lint
 ```
 
-## Estructura del Proyecto
+## 🔍 Monitoreo
+
+- `/metrics`: Métricas en formato Prometheus
+- `/health`: Estado de salud del sistema
+- `/status`: Estado general
+- `/status/detailed`: Estado detallado
+
+## 🔐 Seguridad
+
+- Autenticación JWT
+- Rate limiting por cliente
+- Validación de datos
+- Control de acceso por roles
+
+## 📦 Estructura del Proyecto
 
 ```
-├── config.js           # Configuración centralizada
-├── index.js           # Punto de entrada
-├── ProcessManager.js  # Gestión de procesos
-├── MetricsCollector.js # Recolección de métricas
-├── client.js         # Cliente de prueba
-└── simulateTraffic.js # Simulador de tráfico
+src/
+├── core/          # Componentes centrales
+├── routes/        # Endpoints HTTP
+├── sockets/       # Manejo de WebSockets
+├── middleware/    # Middlewares
+├── utils/         # Utilidades
+├── config/        # Configuración
+└── validation/    # Esquemas de validación
 ```
 
-## Monitoreo
+## 🤝 Contribuir
 
-El sistema incluye endpoints para monitoreo:
+1. Fork el proyecto
+2. Crear una rama (`git checkout -b feature/nueva-caracteristica`)
+3. Commit los cambios (`git commit -m 'feat: Agregar nueva característica'`)
+4. Push a la rama (`git push origin feature/nueva-caracteristica`)
+5. Abrir un Pull Request
 
-- `/health`: Estado básico del sistema
-- `/metrics`: Métricas de Prometheus
-- `/status/detailed`: Estado detallado del sistema
+## 📄 Licencia
 
-## CI/CD
-
-El proyecto incluye configuración de GitHub Actions para:
-
-- Pruebas automáticas
-- Análisis de código
-- Construcción de imagen Docker
-- Despliegue automático
-
-## Licencia
-
-ISC
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.

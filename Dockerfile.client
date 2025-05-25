@@ -1,0 +1,23 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copiar archivos de configuración
+COPY package*.json ./
+COPY .eslintrc.json ./
+
+# Instalar dependencias
+RUN npm ci --only=production
+
+# Copiar código fuente
+COPY src/ ./src/
+
+# Crear directorio para logs
+RUN mkdir -p logs && \
+    chown -R node:node logs
+
+# Cambiar a usuario no root
+USER node
+
+# Comando para iniciar el cliente
+CMD ["npm", "run", "simulate"] 

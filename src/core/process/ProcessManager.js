@@ -1,5 +1,5 @@
-const EventEmitter = require('events');
-const { PROCESS_STATES, SIMULATION_CONFIG } = require('./config');
+const EventEmitter = require("events");
+const { PROCESS_STATES, SIMULATION_CONFIG } = require("../../config/config");
 
 class ProcessManager extends EventEmitter {
   constructor() {
@@ -22,11 +22,11 @@ class ProcessManager extends EventEmitter {
       endTime: null,
       retries: 0,
       error: null,
-      canceled: false
+      canceled: false,
     };
 
     this.processes.set(processId, process);
-    this.emit('process:created', process);
+    this.emit("process:created", process);
     return process;
   }
 
@@ -40,23 +40,23 @@ class ProcessManager extends EventEmitter {
 
     try {
       await this._executeProcess(process);
-      
+
       if (!process.canceled) {
         process.state = PROCESS_STATES.COMPLETED;
         process.endTime = Date.now();
-        this.emit('process:completed', process);
+        this.emit("process:completed", process);
       }
     } catch (error) {
       process.error = error;
       process.state = PROCESS_STATES.FAILED;
       process.endTime = Date.now();
-      
+
       if (process.retries < SIMULATION_CONFIG.process.maxRetries) {
         process.retries++;
         return this.startProcess(processId);
       }
-      
-      this.emit('process:failed', process);
+
+      this.emit("process:failed", process);
     } finally {
       this.activeProcesses.delete(processId);
     }
@@ -65,8 +65,10 @@ class ProcessManager extends EventEmitter {
   }
 
   async _executeProcess(process) {
-    const duration = Math.random() * 
-      (SIMULATION_CONFIG.process.maxDuration - SIMULATION_CONFIG.process.minDuration) + 
+    const duration =
+      Math.random() *
+        (SIMULATION_CONFIG.process.maxDuration -
+          SIMULATION_CONFIG.process.minDuration) +
       SIMULATION_CONFIG.process.minDuration;
 
     return new Promise((resolve, reject) => {
@@ -80,8 +82,8 @@ class ProcessManager extends EventEmitter {
           clearInterval(checkInterval);
           process.state = PROCESS_STATES.INTERRUPTED;
           process.endTime = Date.now();
-          this.emit('process:interrupted', process);
-          reject(new Error('Proceso interrumpido'));
+          this.emit("process:interrupted", process);
+          reject(new Error("Proceso interrumpido"));
         }
       }, SIMULATION_CONFIG.process.checkInterval);
 
@@ -108,13 +110,15 @@ class ProcessManager extends EventEmitter {
   }
 
   getProcessesByOwner(ownerId) {
-    return Array.from(this.processes.values())
-      .filter(process => process.owner === ownerId);
+    return Array.from(this.processes.values()).filter(
+      (process) => process.owner === ownerId,
+    );
   }
 
   getProcessesByState(state) {
-    return Array.from(this.processes.values())
-      .filter(process => process.state === state);
+    return Array.from(this.processes.values()).filter(
+      (process) => process.state === state,
+    );
   }
 
   cleanup() {
@@ -122,11 +126,11 @@ class ProcessManager extends EventEmitter {
     const retentionTime = SIMULATION_CONFIG.server.metricsRetention;
 
     for (const [id, process] of this.processes.entries()) {
-      if (process.endTime && (now - process.endTime > retentionTime)) {
+      if (process.endTime && now - process.endTime > retentionTime) {
         this.processes.delete(id);
       }
     }
   }
 }
 
-module.exports = ProcessManager; 
+module.exports = ProcessManager;

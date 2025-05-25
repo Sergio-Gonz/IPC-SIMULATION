@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Ejecutar todas las pruebas
+npm test || exit 1
+
+# Verificar cobertura de código
+npm run test:coverage || exit 1
+
+# Ejecutar auditoría de seguridad
+npm run audit:deps || exit 1
+npm run audit:code || exit 1 

@@ -1,0 +1,55 @@
+# Configuración global de Prometheus para el sistema IPC
+global:
+  scrape_interval: 15s # Intervalo de recolección
+  evaluation_interval: 15s # Intervalo de evaluación de reglas
+  scrape_timeout: 10s # Timeout para recolección
+
+# Reglas de alerta (se cargarán desde archivos externos)
+rule_files:
+  - "rules/*.yml"
+
+# Configuración de recolección de métricas
+scrape_configs:
+  # Configuración para el servidor IPC
+  - job_name: "ipc_server"
+    metrics_path: "/metrics"
+    scheme: "http"
+    scrape_interval: 5s # Más frecuente para métricas críticas
+    scrape_timeout: 4s
+    static_configs:
+      - targets: ["server:3000"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "ipc_server"
+      - target_label: environment
+        replacement: ${ENVIRONMENT:-development}
+      - target_label: project
+        replacement: "ipc_simulation"
+
+  # Métricas del propio Prometheus
+  - job_name: "prometheus"
+    metrics_path: "/metrics"
+    scheme: "http"
+    static_configs:
+      - targets: ["localhost:9090"]
+    relabel_configs:
+      - target_label: environment
+        replacement: ${ENVIRONMENT:-development}
+
+  # Métricas del sistema host (node_exporter)
+  - job_name: "node"
+    metrics_path: "/metrics"
+    scheme: "http"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+    relabel_configs:
+      - target_label: environment
+        replacement: ${ENVIRONMENT:-development}
+
+# Configuración de alerting
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - 'alertmanager:9093'  # Comentado hasta implementar AlertManager
