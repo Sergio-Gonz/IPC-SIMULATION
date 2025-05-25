@@ -1,4 +1,4 @@
-const { createLogger } = require("../../config/logging");
+const { createLogger } = require('../../config/logging');
 
 class QueueManager {
   constructor(config = {}) {
@@ -9,25 +9,25 @@ class QueueManager {
     this.createdAt = Date.now();
 
     // Usar el logger centralizado
-    this.logger = createLogger("queue-manager", {
+    this.logger = createLogger('queue-manager', {
       file: {
-        level: config.logLevel || "info",
+        level: config.logLevel || 'info',
       },
     });
   }
 
   validateAction(action) {
-    if (!action || typeof action !== "object") {
-      this.logger.warn("Acción inválida: debe ser un objeto");
+    if (!action || typeof action !== 'object') {
+      this.logger.warn('Acción inválida: debe ser un objeto');
       return false;
     }
 
-    const requiredFields = ["type", "data"];
+    const requiredFields = ['type', 'data'];
     const missingFields = requiredFields.filter((field) => !(field in action));
 
     if (missingFields.length > 0) {
       this.logger.warn(
-        `Acción inválida: faltan campos requeridos [${missingFields.join(", ")}]`,
+        `Acción inválida: faltan campos requeridos [${missingFields.join(', ')}]`,
       );
       return false;
     }
@@ -43,7 +43,7 @@ class QueueManager {
     if (!this.canEnqueue()) {
       this.discardedActions++;
       this.logger.warn({
-        message: "Cola de procesos llena, acción descartada",
+        message: 'Cola de procesos llena, acción descartada',
         queueSize: this.queue.length,
         maxSize: this.maxQueueSize,
         discardedTotal: this.discardedActions,
@@ -66,7 +66,7 @@ class QueueManager {
     this.queue.push(queuedAction);
 
     this.logger.info({
-      message: "Acción encolada exitosamente",
+      message: 'Acción encolada exitosamente',
       actionId: queuedAction.id,
       queueSize: this.queue.length,
       actionType: action.type,
@@ -77,7 +77,7 @@ class QueueManager {
 
   dequeue() {
     if (this.isEmpty) {
-      this.logger.debug("Intento de dequeue en cola vacía");
+      this.logger.debug('Intento de dequeue en cola vacía');
       return null;
     }
 
@@ -86,7 +86,7 @@ class QueueManager {
 
     const waitTime = Date.now() - action.timestamp;
     this.logger.info({
-      message: "Acción desencolada",
+      message: 'Acción desencolada',
       actionId: action.id,
       waitTime,
       remainingQueue: this.queue.length,
@@ -100,7 +100,7 @@ class QueueManager {
     this.queue = [];
 
     this.logger.info({
-      message: "Cola limpiada",
+      message: 'Cola limpiada',
       clearedActions: clearedCount,
     });
   }
@@ -128,7 +128,9 @@ class QueueManager {
   }
 
   getAverageWaitTime() {
-    if (this.isEmpty) return 0;
+    if (this.isEmpty) {
+      return 0;
+    }
     const now = Date.now();
     const totalWaitTime = this.queue.reduce(
       (acc, action) => acc + (now - action.timestamp),
@@ -149,7 +151,7 @@ class QueueManager {
     const prunedCount = initialLength - this.queue.length;
     if (prunedCount > 0) {
       this.logger.info({
-        message: "Acciones antiguas eliminadas",
+        message: 'Acciones antiguas eliminadas',
         prunedCount,
         remainingActions: this.queue.length,
       });

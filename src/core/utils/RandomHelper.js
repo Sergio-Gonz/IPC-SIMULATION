@@ -4,17 +4,23 @@ class RandomHelper {
   }
 
   static getRandomFromArray(array) {
-    if (!array || array.length === 0) return null;
+    if (!array || array.length === 0) {
+      return null;
+    }
     return array[Math.floor(Math.random() * array.length)];
   }
 
   static getRandomProcessType(permissions) {
-    if (!permissions?.processTypes) return null;
+    if (!permissions?.processTypes) {
+      return null;
+    }
     return this.getRandomFromArray(permissions.processTypes);
   }
 
   static getRandomAction(permissions) {
-    if (!permissions?.actions) return null;
+    if (!permissions?.actions) {
+      return null;
+    }
     return this.getRandomFromArray(permissions.actions);
   }
 

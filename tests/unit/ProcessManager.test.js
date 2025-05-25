@@ -62,7 +62,7 @@ describe('ProcessManager', () => {
       });
 
       const startedProcess = await processManager.startProcess(processId);
-      
+
       expect(startedProcess.state).toBe(PROCESS_STATES.COMPLETED);
       expect(startedProcess.startTime).toBeTruthy();
       expect(startedProcess.endTime).toBeTruthy();
@@ -86,7 +86,7 @@ describe('ProcessManager', () => {
         .mockResolvedValueOnce();
 
       const startedProcess = await processManager.startProcess(processId);
-      
+
       expect(startedProcess.retries).toBe(1);
       expect(startedProcess.state).toBe(PROCESS_STATES.COMPLETED);
     });
@@ -99,7 +99,7 @@ describe('ProcessManager', () => {
 
       // Iniciar el proceso
       const processPromise = processManager.startProcess(processId);
-      
+
       // Interrumpir después de un breve delay
       setTimeout(() => {
         const result = processManager.interruptProcess(processId);
@@ -157,12 +157,12 @@ describe('ProcessManager', () => {
       const oldProcess = processManager.createProcess('old-process', {
         type: 'TEST_PROCESS'
       });
-      
+
       // Simular proceso completado hace tiempo
       oldProcess.endTime = Date.now() - (SIMULATION_CONFIG.server.metricsRetention * 2);
-      
+
       processManager.cleanup();
-      
+
       expect(processManager.getProcessInfo('old-process')).toBeUndefined();
     });
 
@@ -170,13 +170,13 @@ describe('ProcessManager', () => {
       const recentProcess = processManager.createProcess('recent-process', {
         type: 'TEST_PROCESS'
       });
-      
+
       // Simular proceso completado recientemente
       recentProcess.endTime = Date.now() - 1000;
-      
+
       processManager.cleanup();
-      
+
       expect(processManager.getProcessInfo('recent-process')).toBeTruthy();
     });
   });
-}); 
+});

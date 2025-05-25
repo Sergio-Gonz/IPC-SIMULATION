@@ -1,35 +1,35 @@
-const fs = require("fs");
-const path = require("path");
-const { promisify } = require("util");
-const logger = require("../src/core/logger/logger");
-const { createLogger } = require("./config/logging");
-const { createLogger: createLoggerConfig } = require("../config/logging");
+const fs = require('fs');
+const path = require('path');
+const { promisify } = require('util');
+const logger = require('../src/core/logger/logger');
+const { createLogger } = require('./config/logging');
+const { createLogger: createLoggerConfig } = require('../config/logging');
 
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
 
 const IGNORE_PATTERNS = [
-  "node_modules",
-  ".git",
-  "dist",
-  "build",
-  "logs",
-  "*.log",
-  "*.md",
-  "package-lock.json",
+  'node_modules',
+  '.git',
+  'dist',
+  'build',
+  'logs',
+  '*.log',
+  '*.md',
+  'package-lock.json',
 ];
 
 async function shouldProcessFile(filePath) {
   // Ignorar archivos de test
-  if (filePath.includes(".test.") || filePath.includes("__tests__")) {
+  if (filePath.includes('.test.') || filePath.includes('__tests__')) {
     return false;
   }
 
   // Verificar patrones de ignorar
   return !IGNORE_PATTERNS.some((pattern) => {
-    if (pattern.includes("*")) {
-      const regex = new RegExp(pattern.replace("*", ".*"));
+    if (pattern.includes('*')) {
+      const regex = new RegExp(pattern.replace('*', '.*'));
       return regex.test(filePath);
     }
     return filePath.includes(pattern);
@@ -38,25 +38,25 @@ async function shouldProcessFile(filePath) {
 
 async function migrateFile(filePath) {
   try {
-    const content = await readFile(filePath, "utf8");
-    const lines = content.split("\n");
+    const content = await readFile(filePath, 'utf8');
+    const lines = content.split('\n');
     let modified = false;
     let hasLoggerImport = false;
     let hasLoggerDeclaration = false;
 
     // Buscar si ya tiene importación del logger
     lines.forEach((line) => {
-      if (line.includes("require('./config/logging')")) {
+      if (line.includes('require(\'./config/logging\')')) {
         hasLoggerImport = true;
       }
-      if (line.includes("const logger = createLogger(")) {
+      if (line.includes('const logger = createLogger(')) {
         hasLoggerDeclaration = true;
       }
     });
 
     // Procesar cada línea
     const newLines = lines.map((line) => {
-      if (line.includes("console.log(")) {
+      if (line.includes('console.log(')) {
         modified = true;
         // Extraer argumentos del console.log
         const match = line.match(/console\.log\((.*)\)/);
@@ -72,16 +72,16 @@ async function migrateFile(filePath) {
 
     // Agregar importación y declaración del logger si es necesario
     if (modified && !hasLoggerImport) {
-      newLines.unshift("const { createLogger } = require('./config/logging');");
+      newLines.unshift('const { createLogger } = require(\'./config/logging\');');
     }
     if (modified && !hasLoggerDeclaration) {
-      const serviceName = path.basename(filePath, ".js");
+      const serviceName = path.basename(filePath, '.js');
       newLines.unshift(`const logger = createLogger('${serviceName}');`);
-      newLines.unshift("");
+      newLines.unshift('');
     }
 
     if (modified) {
-      await writeFile(filePath, newLines.join("\n"));
+      await writeFile(filePath, newLines.join('\n'));
       logger.info(`Archivo migrado: ${filePath}`);
       return true;
     }
@@ -106,7 +106,7 @@ async function walkDirectory(dir) {
         continue;
       }
       migratedCount += await walkDirectory(filePath);
-    } else if (file.endsWith(".js") && (await shouldProcessFile(filePath))) {
+    } else if (file.endsWith('.js') && (await shouldProcessFile(filePath))) {
       if (await migrateFile(filePath)) {
         migratedCount++;
       }
@@ -118,10 +118,10 @@ async function walkDirectory(dir) {
 
 async function main() {
   try {
-    logger.info("Iniciando migración de logging...");
+    logger.info('Iniciando migración de logging...');
     const startTime = Date.now();
 
-    const rootDir = path.join(__dirname, "..");
+    const rootDir = path.join(__dirname, '..');
     const migratedCount = await walkDirectory(rootDir);
 
     const duration = (Date.now() - startTime) / 1000;
@@ -129,7 +129,7 @@ async function main() {
       filesProcessed: migratedCount,
     });
   } catch (error) {
-    logger.error("Error durante la migración:", error);
+    logger.error('Error durante la migración:', error);
     process.exit(1);
   }
 }

@@ -1,5 +1,5 @@
-const EventEmitter = require("events");
-const { PROCESS_STATES, SIMULATION_CONFIG } = require("../../config/config");
+const EventEmitter = require('events');
+const { PROCESS_STATES, SIMULATION_CONFIG } = require('../../config/config');
 
 class ProcessManager extends EventEmitter {
   constructor() {
@@ -26,13 +26,15 @@ class ProcessManager extends EventEmitter {
     };
 
     this.processes.set(processId, process);
-    this.emit("process:created", process);
+    this.emit('process:created', process);
     return process;
   }
 
   async startProcess(processId) {
     const process = this.processes.get(processId);
-    if (!process) throw new Error(`Proceso ${processId} no encontrado`);
+    if (!process) {
+      throw new Error(`Proceso ${processId} no encontrado`);
+    }
 
     process.state = PROCESS_STATES.RUNNING;
     process.startTime = Date.now();
@@ -44,7 +46,7 @@ class ProcessManager extends EventEmitter {
       if (!process.canceled) {
         process.state = PROCESS_STATES.COMPLETED;
         process.endTime = Date.now();
-        this.emit("process:completed", process);
+        this.emit('process:completed', process);
       }
     } catch (error) {
       process.error = error;
@@ -56,7 +58,7 @@ class ProcessManager extends EventEmitter {
         return this.startProcess(processId);
       }
 
-      this.emit("process:failed", process);
+      this.emit('process:failed', process);
     } finally {
       this.activeProcesses.delete(processId);
     }
@@ -73,7 +75,9 @@ class ProcessManager extends EventEmitter {
 
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
-        if (!process.canceled) resolve();
+        if (!process.canceled) {
+          resolve();
+        }
       }, duration);
 
       const checkInterval = setInterval(() => {
@@ -82,8 +86,8 @@ class ProcessManager extends EventEmitter {
           clearInterval(checkInterval);
           process.state = PROCESS_STATES.INTERRUPTED;
           process.endTime = Date.now();
-          this.emit("process:interrupted", process);
-          reject(new Error("Proceso interrumpido"));
+          this.emit('process:interrupted', process);
+          reject(new Error('Proceso interrumpido'));
         }
       }, SIMULATION_CONFIG.process.checkInterval);
 
@@ -95,7 +99,9 @@ class ProcessManager extends EventEmitter {
 
   interruptProcess(processId) {
     const process = this.activeProcesses.get(processId);
-    if (!process) return false;
+    if (!process) {
+      return false;
+    }
 
     process.canceled = true;
     return true;

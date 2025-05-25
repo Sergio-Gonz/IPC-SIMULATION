@@ -1,25 +1,25 @@
-require("dotenv").config();
-const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
-const prometheus = require("prom-client");
-const helmet = require("helmet");
-const cors = require("cors");
-const rateLimit = require("express-rate-limit");
-const logger = require("./core/logger/logger");
-const ProcessManager = require("./core/process/ProcessManager");
-const MetricsCollector = require("./core/metrics/MetricsCollector");
-const routes = require("./routes");
-const handleConnection = require("./sockets/connectionHandler");
-const { checkConnectionLimit } = require("./middleware/auth");
+require('dotenv').config();
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const prometheus = require('prom-client');
+const helmet = require('helmet');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const logger = require('./core/logger/logger');
+const ProcessManager = require('./core/process/ProcessManager');
+const MetricsCollector = require('./core/metrics/MetricsCollector');
+const routes = require('./routes');
+const handleConnection = require('./sockets/connectionHandler');
+const { checkConnectionLimit } = require('./middleware/auth');
 
 // Inicializar Express y Socket.IO
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "*",
-    methods: ["GET", "POST"],
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST'],
   },
 });
 
@@ -31,8 +31,8 @@ const metricsCollector = new MetricsCollector();
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "*",
-    methods: ["GET", "POST"],
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST'],
     credentials: true,
   }),
 );
@@ -45,7 +45,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Límite de payload
-app.use(express.json({ limit: "10kb" }));
+app.use(express.json({ limit: '10kb' }));
 
 // Configuración de métricas Prometheus
 const collectDefaultMetrics = prometheus.collectDefaultMetrics;
@@ -53,18 +53,18 @@ collectDefaultMetrics();
 
 // Métricas personalizadas
 const activeProcesses = new prometheus.Gauge({
-  name: "ipc_active_processes",
-  help: "Número de procesos activos",
+  name: 'ipc_active_processes',
+  help: 'Número de procesos activos',
 });
 
 const errorCounter = new prometheus.Counter({
-  name: "ipc_errors_total",
-  help: "Total de errores en el sistema",
+  name: 'ipc_errors_total',
+  help: 'Total de errores en el sistema',
 });
 
 const queueSize = new prometheus.Gauge({
-  name: "ipc_queue_size",
-  help: "Tamaño actual de la cola de procesos",
+  name: 'ipc_queue_size',
+  help: 'Tamaño actual de la cola de procesos',
 });
 
 // Cache de métricas
@@ -94,22 +94,21 @@ app.locals.metricsCache = {
 };
 
 // Configurar rutas
-app.use("/", routes);
+app.use('/', routes);
 
 // Configurar Socket.IO
 io.use((socket, next) => checkConnectionLimit(io, socket, next));
 
-io.on("connection", (socket) => {
+io.on('connection', (socket) => {
   handleConnection(io, socket, processManager);
 });
 
-// Manejo de errores global
-app.use((err, req, res, next) => {
-  logger.error(`Error no manejado: ${err.message}`);
-  errorCounter.inc();
+// Error handling middleware
+app.use((err, req, res, _next) => {
+  logger.error('Error handling middleware:', err);
   res.status(500).json({
-    status: "error",
-    message: "Error interno del servidor",
+    error: 'Internal Server Error',
+    message: err.message
   });
 });
 

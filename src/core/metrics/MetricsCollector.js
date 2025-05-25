@@ -1,6 +1,6 @@
-const prometheus = require("prom-client");
-const { METRICS_CONFIG } = require("../../config/config");
-const logger = require("../../core/logger/logger");
+const prometheus = require('prom-client');
+const { METRICS_CONFIG } = require('../../config/config');
+const logger = require('../../core/logger/logger');
 
 /**
  * Colector de métricas para el sistema IPC
@@ -24,8 +24,8 @@ class MetricsCollector {
     // Configurar métricas por defecto
     prometheus.collectDefaultMetrics({
       register: this.register,
-      prefix: "ipc_",
-      labels: { application: "ipc_server" },
+      prefix: 'ipc_',
+      labels: { application: 'ipc_server' },
     });
 
     this._initializeMetrics();
@@ -38,72 +38,72 @@ class MetricsCollector {
   _initializeMetrics() {
     // Métricas de procesos
     this.processCounter = new prometheus.Counter({
-      name: "ipc_processes_total",
-      help: "Total de procesos creados",
-      labelNames: ["process_type", "role", "state"],
+      name: 'ipc_processes_total',
+      help: 'Total de procesos creados',
+      labelNames: ['process_type', 'role', 'state'],
       registers: [this.register],
     });
 
     this.processTimeHistogram = new prometheus.Histogram({
-      name: "ipc_process_duration_seconds",
-      help: "Duración de los procesos en segundos",
-      labelNames: ["process_type", "role", "state"],
+      name: 'ipc_process_duration_seconds',
+      help: 'Duración de los procesos en segundos',
+      labelNames: ['process_type', 'role', 'state'],
       buckets: METRICS_CONFIG.processTimeBuckets,
       registers: [this.register],
     });
 
     this.activeProcessesGauge = new prometheus.Gauge({
-      name: "ipc_active_processes",
-      help: "Número actual de procesos activos",
-      labelNames: ["process_type", "role"],
+      name: 'ipc_active_processes',
+      help: 'Número actual de procesos activos',
+      labelNames: ['process_type', 'role'],
       registers: [this.register],
     });
 
     // Métricas de cola
     this.queueSizeGauge = new prometheus.Gauge({
-      name: "ipc_queue_size_current",
-      help: "Tamaño actual de la cola de procesos",
-      labelNames: ["process_type"],
+      name: 'ipc_queue_size_current',
+      help: 'Tamaño actual de la cola de procesos',
+      labelNames: ['process_type'],
       registers: [this.register],
     });
 
     this.queueWaitTimeHistogram = new prometheus.Histogram({
-      name: "ipc_queue_wait_time_seconds",
-      help: "Tiempo de espera en cola en segundos",
-      labelNames: ["process_type", "priority"],
+      name: 'ipc_queue_wait_time_seconds',
+      help: 'Tiempo de espera en cola en segundos',
+      labelNames: ['process_type', 'priority'],
       buckets: [0.1, 0.5, 1, 2, 5, 10, 30],
       registers: [this.register],
     });
 
     // Métricas de errores
     this.errorCounter = new prometheus.Counter({
-      name: "ipc_errors_total",
-      help: "Total de errores por tipo",
-      labelNames: ["error_type", "process_type", "role"],
+      name: 'ipc_errors_total',
+      help: 'Total de errores por tipo',
+      labelNames: ['error_type', 'process_type', 'role'],
       registers: [this.register],
     });
 
     // Métricas de conexiones
     this.connectionGauge = new prometheus.Gauge({
-      name: "ipc_connections_current",
-      help: "Número actual de conexiones",
-      labelNames: ["role"],
+      name: 'ipc_connections_current',
+      help: 'Número actual de conexiones',
+      labelNames: ['role'],
       registers: [this.register],
     });
 
     // Métricas de acciones
     this.actionCounter = new prometheus.Counter({
-      name: "ipc_actions_total",
-      help: "Total de acciones realizadas",
-      labelNames: ["action_type", "role", "status"],
+      name: 'ipc_actions_total',
+      help: 'Total de acciones realizadas',
+      labelNames: ['action_type', 'role', 'status'],
       registers: [this.register],
     });
 
     // Métricas de recursos
     this.resourceUsageGauge = new prometheus.Gauge({
-      name: "ipc_resource_usage_percent",
-      help: "Uso de recursos del sistema",
-      labelNames: ["resource_type"],
+      name: 'ipc_resource_usage_percent',
+      help: 'Uso de recursos del sistema',
+      labelNames: ['resource_type'],
       registers: [this.register],
     });
   }
@@ -116,11 +116,11 @@ class MetricsCollector {
    */
   _getProcessLabels(process) {
     if (!this._validateProcess(process)) {
-      logger.warn("Proceso inválido para etiquetas:", process);
+      logger.warn('Proceso inválido para etiquetas:', process);
       return {
-        process_type: "unknown",
-        role: "unknown",
-        state: "unknown",
+        process_type: 'unknown',
+        role: 'unknown',
+        state: 'unknown',
       };
     }
 
@@ -140,7 +140,7 @@ class MetricsCollector {
   _validateProcess(process) {
     return (
       process &&
-      typeof process === "object" &&
+      typeof process === 'object' &&
       process.type &&
       process.role &&
       process.state
@@ -153,7 +153,7 @@ class MetricsCollector {
    */
   recordProcessStart(process) {
     if (!this._validateProcess(process)) {
-      logger.error("Proceso inválido en recordProcessStart:", process);
+      logger.error('Proceso inválido en recordProcessStart:', process);
       return;
     }
 
@@ -161,7 +161,7 @@ class MetricsCollector {
     this.processCounter.inc(labels);
     this.activeProcessesGauge.inc(labels);
 
-    logger.debug("Proceso iniciado:", { process_id: process.id, ...labels });
+    logger.debug('Proceso iniciado:', { process_id: process.id, ...labels });
   }
 
   /**
@@ -170,7 +170,7 @@ class MetricsCollector {
    */
   recordProcessEnd(process) {
     if (!this._validateProcess(process) || !process.startTime) {
-      logger.error("Proceso inválido en recordProcessEnd:", process);
+      logger.error('Proceso inválido en recordProcessEnd:', process);
       return;
     }
 
@@ -180,7 +180,7 @@ class MetricsCollector {
     this.processTimeHistogram.observe(labels, duration);
     this.activeProcessesGauge.dec(labels);
 
-    logger.debug("Proceso finalizado:", {
+    logger.debug('Proceso finalizado:', {
       process_id: process.id,
       duration,
       ...labels,
@@ -196,12 +196,12 @@ class MetricsCollector {
   recordError(errorType, processType, role) {
     const labels = {
       error_type: errorType,
-      process_type: processType || "unknown",
-      role: role || "unknown",
+      process_type: processType || 'unknown',
+      role: role || 'unknown',
     };
 
     this.errorCounter.inc(labels);
-    logger.error("Error registrado:", labels);
+    logger.error('Error registrado:', labels);
   }
 
   /**
@@ -210,12 +210,12 @@ class MetricsCollector {
    */
   recordClientConnection(role) {
     if (!role) {
-      logger.warn("Rol no especificado en conexión de cliente");
+      logger.warn('Rol no especificado en conexión de cliente');
       return;
     }
 
     this.connectionGauge.inc({ role });
-    logger.debug("Cliente conectado:", { role });
+    logger.debug('Cliente conectado:', { role });
   }
 
   /**
@@ -224,12 +224,12 @@ class MetricsCollector {
    */
   recordClientDisconnection(role) {
     if (!role) {
-      logger.warn("Rol no especificado en desconexión de cliente");
+      logger.warn('Rol no especificado en desconexión de cliente');
       return;
     }
 
     this.connectionGauge.dec({ role });
-    logger.debug("Cliente desconectado:", { role });
+    logger.debug('Cliente desconectado:', { role });
   }
 
   /**
@@ -241,11 +241,11 @@ class MetricsCollector {
     const labels = {
       action_type: actionType,
       role: role,
-      status: "denied",
+      status: 'denied',
     };
 
     this.actionCounter.inc(labels);
-    logger.warn("Acción denegada:", labels);
+    logger.warn('Acción denegada:', labels);
   }
 
   /**
@@ -253,11 +253,11 @@ class MetricsCollector {
    * @param {number} size - Tamaño actual de la cola
    * @param {string} processType - Tipo de proceso en cola
    */
-  recordQueueSize(size, processType = "all") {
+  recordQueueSize(size, processType = 'all') {
     this.queueSizeGauge.set({ process_type: processType }, size);
 
     if (size > METRICS_CONFIG.queueWarningThreshold) {
-      logger.warn("Cola alcanzó tamaño de advertencia:", {
+      logger.warn('Cola alcanzó tamaño de advertencia:', {
         size,
         process_type: processType,
         threshold: METRICS_CONFIG.queueWarningThreshold,
@@ -272,7 +272,7 @@ class MetricsCollector {
    */
   recordQueueWaitTime(process, waitTime) {
     if (!this._validateProcess(process)) {
-      logger.error("Proceso inválido en recordQueueWaitTime:", process);
+      logger.error('Proceso inválido en recordQueueWaitTime:', process);
       return;
     }
 
@@ -280,12 +280,12 @@ class MetricsCollector {
     this.queueWaitTimeHistogram.observe(
       {
         process_type: process.type,
-        priority: process.priority || "normal",
+        priority: process.priority || 'normal',
       },
       waitTimeSeconds,
     );
 
-    logger.debug("Tiempo de espera en cola:", {
+    logger.debug('Tiempo de espera en cola:', {
       process_id: process.id,
       wait_time: waitTimeSeconds,
       process_type: process.type,
@@ -298,8 +298,8 @@ class MetricsCollector {
    * @param {Object} usage - Objeto con porcentajes de uso de recursos
    */
   recordResourceUsage(usage) {
-    if (!usage || typeof usage !== "object") {
-      logger.error("Uso de recursos inválido:", usage);
+    if (!usage || typeof usage !== 'object') {
+      logger.error('Uso de recursos inválido:', usage);
       return;
     }
 
@@ -307,7 +307,7 @@ class MetricsCollector {
       this.resourceUsageGauge.set({ resource_type: resource }, value);
     });
 
-    logger.debug("Uso de recursos actualizado:", usage);
+    logger.debug('Uso de recursos actualizado:', usage);
   }
 
   /**
@@ -318,7 +318,7 @@ class MetricsCollector {
     try {
       return await this.register.metrics();
     } catch (error) {
-      logger.error("Error al obtener métricas:", error);
+      logger.error('Error al obtener métricas:', error);
       throw error;
     }
   }
@@ -329,7 +329,7 @@ class MetricsCollector {
   reset() {
     this.register.clear();
     this._initializeMetrics();
-    logger.info("Métricas reiniciadas");
+    logger.info('Métricas reiniciadas');
   }
 }
 

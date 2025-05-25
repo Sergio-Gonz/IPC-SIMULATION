@@ -1,24 +1,24 @@
-const fs = require("fs").promises;
-const path = require("path");
-const { createLogger } = require("./config/logging");
+const fs = require('fs').promises;
+const path = require('path');
+const { createLogger } = require('./config/logging');
 
 // Usar el logger centralizado
-const logger = createLogger("code-auditor");
+const logger = createLogger('code-auditor');
 
 // Archivos y directorios a ignorar
 const IGNORE_PATTERNS = [
-  "node_modules",
-  ".git",
-  "dist",
-  "build",
-  ".env",
-  "*.log",
-  "*.md",
-  "package-lock.json",
+  'node_modules',
+  '.git',
+  'dist',
+  'build',
+  '.env',
+  '*.log',
+  '*.md',
+  'package-lock.json',
 ];
 
 // Extensiones de archivo a auditar
-const FILE_EXTENSIONS = [".js", ".json", ".yml", ".yaml", ".env.example"];
+const FILE_EXTENSIONS = ['.js', '.json', '.yml', '.yaml', '.env.example'];
 
 class CodeAuditor {
   constructor() {
@@ -35,8 +35,8 @@ class CodeAuditor {
 
   shouldIgnore(filePath) {
     return IGNORE_PATTERNS.some((pattern) => {
-      if (pattern.includes("*")) {
-        const regex = new RegExp(pattern.replace("*", ".*"));
+      if (pattern.includes('*')) {
+        const regex = new RegExp(pattern.replace('*', '.*'));
         return regex.test(filePath);
       }
       return filePath.includes(pattern);
@@ -45,9 +45,9 @@ class CodeAuditor {
 
   async auditFile(filePath) {
     try {
-      const content = await fs.readFile(filePath, "utf8");
+      const content = await fs.readFile(filePath, 'utf8');
       const extension = path.extname(filePath);
-      const lines = content.split("\n");
+      const lines = content.split('\n');
 
       this.summary.totalFiles++;
       this.summary.totalLines += lines.length;
@@ -70,17 +70,17 @@ class CodeAuditor {
 
       lines.forEach((line, index) => {
         // Detectar imports
-        if (line.includes("require(") || line.includes("import ")) {
+        if (line.includes('require(') || line.includes('import ')) {
           analysis.imports.push({ line: index + 1, content: line.trim() });
         }
 
         // Detectar exports
-        if (line.includes("module.exports") || line.includes("export ")) {
+        if (line.includes('module.exports') || line.includes('export ')) {
           analysis.exports.push({ line: index + 1, content: line.trim() });
         }
 
         // Detectar clases
-        if (line.includes("class ")) {
+        if (line.includes('class ')) {
           analysis.classes.push({ line: index + 1, content: line.trim() });
         }
 
@@ -93,33 +93,33 @@ class CodeAuditor {
         }
 
         // Detectar problemas potenciales
-        if (line.includes("TODO") || line.includes("FIXME")) {
+        if (line.includes('TODO') || line.includes('FIXME')) {
           analysis.potentialIssues.push({
             line: index + 1,
             content: line.trim(),
-            type: "comment",
+            type: 'comment',
           });
         }
 
         // Detectar uso de console.log en producción
-        if (line.includes("console.log") && !filePath.includes(".test.")) {
+        if (line.includes('console.log') && !filePath.includes('.test.')) {
           analysis.potentialIssues.push({
             line: index + 1,
             content: line.trim(),
-            type: "logging",
-            recommendation: "Reemplazar console.log con el logger centralizado",
+            type: 'logging',
+            recommendation: 'Reemplazar console.log con el logger centralizado',
           });
         }
       });
 
       // Registrar el contenido y análisis del archivo
-      logger.info("Análisis de archivo completado", {
+      logger.info('Análisis de archivo completado', {
         file: filePath,
         analysis: {
           ...analysis,
           content:
             content.length > 1000
-              ? content.substring(0, 1000) + "... (truncado)"
+              ? content.substring(0, 1000) + '... (truncado)'
               : content,
         },
       });
@@ -163,7 +163,7 @@ class CodeAuditor {
   }
 
   generateSummary() {
-    logger.info("Resumen de la auditoría", {
+    logger.info('Resumen de la auditoría', {
       summary: this.summary,
       filesWithIssues: this.filesWithIssues,
     });
@@ -179,13 +179,13 @@ class CodeAuditor {
 
 ## Archivos con Problemas Potenciales
 ${this.filesWithIssues
-  .map(
-    (file) => `
+    .map(
+      (file) => `
 ### ${file.file}
-${file.issues.map((issue) => `- Línea ${issue.line}: ${issue.type} - ${issue.content}`).join("\n")}
+${file.issues.map((issue) => `- Línea ${issue.line}: ${issue.type} - ${issue.content}`).join('\n')}
 `,
-  )
-  .join("\n")}
+    )
+    .join('\n')}
 
 ## Recomendaciones
 1. Revisar los console.log en archivos de producción
@@ -195,7 +195,7 @@ ${file.issues.map((issue) => `- Línea ${issue.line}: ${issue.type} - ${issue.co
 Generado el: ${new Date().toISOString()}
 `;
 
-    return fs.writeFile("audit-report.md", markdownReport);
+    return fs.writeFile('audit-report.md', markdownReport);
   }
 }
 
@@ -203,14 +203,14 @@ Generado el: ${new Date().toISOString()}
 async function runAudit() {
   const auditor = new CodeAuditor();
 
-  logger.info("Iniciando auditoría de código");
+  logger.info('Iniciando auditoría de código');
 
   try {
     await auditor.auditDirectory(process.cwd());
     await auditor.generateSummary();
-    logger.info("Auditoría completada exitosamente");
+    logger.info('Auditoría completada exitosamente');
   } catch (error) {
-    logger.error("Error durante la auditoría:", error);
+    logger.error('Error durante la auditoría:', error);
     process.exit(1);
   }
 }

@@ -1,11 +1,11 @@
-const io = require("socket.io-client");
-const logger = require("../core/logger/logger");
-const config = require("../config/config");
+const io = require('socket.io-client');
+const logger = require('../core/logger/logger');
+const config = require('../config/config');
 
 // Configuración
 const CONFIG = {
   NUM_CLIENTS: process.env.NUM_CLIENTS || 10,
-  SERVER_URL: process.env.SERVER_URL || "http://localhost:3000",
+  SERVER_URL: process.env.SERVER_URL || 'http://localhost:3000',
   MESSAGE_INTERVAL: process.env.MESSAGE_INTERVAL || 5000,
   RECONNECTION_ATTEMPTS: 5,
   RECONNECTION_DELAY: 1000,
@@ -26,7 +26,7 @@ class ClientSimulator {
       reconnection: true,
       reconnectionAttempts: CONFIG.RECONNECTION_ATTEMPTS,
       reconnectionDelay: CONFIG.RECONNECTION_DELAY,
-      auth: { clientRole: "simulator" },
+      auth: { clientRole: 'simulator' },
     });
 
     this.setupEventHandlers();
@@ -34,9 +34,9 @@ class ClientSimulator {
   }
 
   setupEventHandlers() {
-    this.client.on("connect", () => {
+    this.client.on('connect', () => {
       logger.info({
-        event: "connect",
+        event: 'connect',
         clientIndex: this.index,
         clientId: this.client.id,
       });
@@ -44,7 +44,7 @@ class ClientSimulator {
       this.startMessageInterval();
     });
 
-    this.client.on("mensaje", (data) => {
+    this.client.on('mensaje', (data) => {
       const receiveTime = Date.now();
       if (this.lastMessageTime) {
         const latency = receiveTime - this.lastMessageTime;
@@ -52,24 +52,24 @@ class ClientSimulator {
       }
 
       logger.debug({
-        event: "message_received",
+        event: 'message_received',
         clientIndex: this.index,
         data,
         latency: this.latencies[this.latencies.length - 1],
       });
     });
 
-    this.client.on("disconnect", () => {
+    this.client.on('disconnect', () => {
       logger.warn({
-        event: "disconnect",
+        event: 'disconnect',
         clientIndex: this.index,
       });
       this.stopMessageInterval();
     });
 
-    this.client.on("connect_error", (error) => {
+    this.client.on('connect_error', (error) => {
       logger.error({
-        event: "connect_error",
+        event: 'connect_error',
         clientIndex: this.index,
         error: error.message,
       });
@@ -81,7 +81,7 @@ class ClientSimulator {
       this.lastMessageTime = Date.now();
       this.messageCount++;
 
-      this.client.emit("mensaje", {
+      this.client.emit('mensaje', {
         clientIndex: this.index,
         messageId: this.messageCount,
         timestamp: this.lastMessageTime,
@@ -118,7 +118,7 @@ class TrafficSimulator {
 
   start() {
     logger.info({
-      event: "simulation_start",
+      event: 'simulation_start',
       config: CONFIG,
     });
 
@@ -134,21 +134,21 @@ class TrafficSimulator {
   }
 
   setupGracefulShutdown() {
-    process.on("SIGINT", () => {
-      logger.info("Iniciando apagado graceful...");
+    process.on('SIGINT', () => {
+      logger.info('Iniciando apagado graceful...');
       this.stop();
       process.exit(0);
     });
 
-    process.on("uncaughtException", (error) => {
-      logger.error("Error no capturado:", error);
+    process.on('uncaughtException', (error) => {
+      logger.error('Error no capturado:', error);
       this.stop();
       process.exit(1);
     });
   }
 
   stop() {
-    logger.info("Deteniendo simulación...");
+    logger.info('Deteniendo simulación...');
     this.running = false;
 
     this.clients.forEach((simulator) => {
@@ -163,7 +163,9 @@ class TrafficSimulator {
 
   startStatsReporting() {
     setInterval(() => {
-      if (!this.running) return;
+      if (!this.running) {
+        return;
+      }
 
       const stats = this.clients.map((simulator) => simulator.getStats());
       const totalMessages = stats.reduce(
@@ -176,7 +178,7 @@ class TrafficSimulator {
       const connectedClients = stats.filter((stat) => stat.connected).length;
 
       logger.info({
-        event: "stats_report",
+        event: 'stats_report',
         totalMessages,
         averageLatency: avgLatency.toFixed(2),
         connectedClients,
@@ -188,7 +190,7 @@ class TrafficSimulator {
   reportFinalStats() {
     const stats = this.clients.map((simulator) => simulator.getStats());
     logger.info({
-      event: "final_stats",
+      event: 'final_stats',
       stats,
       timestamp: Date.now(),
     });

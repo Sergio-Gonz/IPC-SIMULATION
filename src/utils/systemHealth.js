@@ -1,4 +1,4 @@
-const config = require("../config/config");
+const config = require('../config/config');
 
 const checkSystemHealth = (processManager, io) => {
   const activeProcessCount = processManager.getActiveProcesses().length;
@@ -33,7 +33,7 @@ const checkSystemHealth = (processManager, io) => {
   }
 
   return {
-    status: healthIssues.length > 0 ? "degraded" : "healthy",
+    status: healthIssues.length > 0 ? 'degraded' : 'healthy',
     issues: healthIssues,
     metrics: {
       memoryUsagePercent,

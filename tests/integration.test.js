@@ -1,9 +1,9 @@
-const QueueManager = require("../src/core/queue/QueueManager");
-const ProcessManager = require("../src/core/process/ProcessManager");
-const RandomHelper = require("../src/core/utils/RandomHelper");
-const MetricsCollector = require("../src/core/metrics/MetricsCollector");
+const QueueManager = require('../src/core/queue/QueueManager');
+const ProcessManager = require('../src/core/process/ProcessManager');
+const RandomHelper = require('../src/core/utils/RandomHelper');
+const MetricsCollector = require('../src/core/metrics/MetricsCollector');
 
-describe("Integración de Componentes", () => {
+describe('Integración de Componentes', () => {
   let queueManager;
   let processManager;
   let metricsCollector;
@@ -14,11 +14,11 @@ describe("Integración de Componentes", () => {
     metricsCollector = new MetricsCollector();
   });
 
-  describe("Flujo de Proceso Completo", () => {
-    test("proceso pasa por todos los estados correctamente", async () => {
+  describe('Flujo de Proceso Completo', () => {
+    test('proceso pasa por todos los estados correctamente', async () => {
       // Preparar acción
       const action = {
-        type: "TEST_PROCESS",
+        type: 'TEST_PROCESS',
         data: { value: 42 },
         priority: 1,
       };
@@ -29,20 +29,20 @@ describe("Integración de Componentes", () => {
       expect(queueManager.length).toBe(1);
 
       // Crear y ejecutar proceso
-      const processId = RandomHelper.generateProcessId("test-socket");
+      const processId = RandomHelper.generateProcessId('test-socket');
       const process = processManager.createProcess(processId, {
         ...action,
-        owner: "test-user",
-        role: "admin",
+        owner: 'test-user',
+        role: 'admin',
       });
 
-      expect(process.state).toBe("PENDING");
+      expect(process.state).toBe('PENDING');
 
       await processManager.startProcess(processId);
-      expect(process.state).toBe("RUNNING");
+      expect(process.state).toBe('RUNNING');
 
       await processManager.completeProcess(processId);
-      expect(process.state).toBe("COMPLETED");
+      expect(process.state).toBe('COMPLETED');
 
       // Verificar métricas
       const stats = queueManager.getStats();
@@ -50,11 +50,11 @@ describe("Integración de Componentes", () => {
       expect(stats.discardedActions).toBe(0);
     });
 
-    test("maneja errores y límites correctamente", async () => {
+    test('maneja errores y límites correctamente', async () => {
       // Llenar la cola
       for (let i = 0; i < 6; i++) {
         const result = queueManager.enqueue({
-          type: "TEST_PROCESS",
+          type: 'TEST_PROCESS',
           data: { value: i },
         });
         if (i < 5) {
@@ -71,23 +71,23 @@ describe("Integración de Componentes", () => {
       expect(stats.utilizationPercent).toBe(100);
 
       // Intentar proceso con error
-      const processId = RandomHelper.generateProcessId("test-socket");
+      const processId = RandomHelper.generateProcessId('test-socket');
       const process = processManager.createProcess(processId, {
-        type: "TEST_ERROR",
+        type: 'TEST_ERROR',
         data: { shouldFail: true },
       });
 
       try {
         await processManager.startProcess(processId);
       } catch (error) {
-        expect(process.state).toBe("FAILED");
+        expect(process.state).toBe('FAILED');
         expect(process.error).toBeTruthy();
       }
     });
   });
 
-  describe("Rendimiento y Carga", () => {
-    test("maneja múltiples procesos concurrentes", async () => {
+  describe('Rendimiento y Carga', () => {
+    test('maneja múltiples procesos concurrentes', async () => {
       const numProcesses = 10;
       const processes = [];
 
@@ -96,7 +96,7 @@ describe("Integración de Componentes", () => {
         const processId = RandomHelper.generateProcessId(`test-socket-${i}`);
         processes.push(
           processManager.createProcess(processId, {
-            type: "TEST_CONCURRENT",
+            type: 'TEST_CONCURRENT',
             data: { index: i },
             priority: RandomHelper.getRandomPriority(),
           }),
@@ -114,21 +114,21 @@ describe("Integración de Componentes", () => {
 
       // Verificar resultados
       const completedProcesses = processes.filter(
-        (p) => p.state === "COMPLETED",
+        (p) => p.state === 'COMPLETED',
       );
-      const failedProcesses = processes.filter((p) => p.state === "FAILED");
+      const failedProcesses = processes.filter((p) => p.state === 'FAILED');
 
       expect(completedProcesses.length + failedProcesses.length).toBe(
         numProcesses,
       );
     });
 
-    test("prioriza procesos correctamente", () => {
+    test('prioriza procesos correctamente', () => {
       // Encolar procesos con diferentes prioridades
       const priorities = [3, 1, 2];
       priorities.forEach((priority) => {
         queueManager.enqueue({
-          type: "TEST_PRIORITY",
+          type: 'TEST_PRIORITY',
           data: { value: priority },
           priority,
         });
@@ -145,12 +145,12 @@ describe("Integración de Componentes", () => {
     });
   });
 
-  describe("Métricas y Monitoreo", () => {
-    test("registra métricas correctamente", async () => {
+  describe('Métricas y Monitoreo', () => {
+    test('registra métricas correctamente', async () => {
       // Simular actividad
-      const processId = RandomHelper.generateProcessId("test-socket");
+      const processId = RandomHelper.generateProcessId('test-socket');
       const process = processManager.createProcess(processId, {
-        type: "TEST_METRICS",
+        type: 'TEST_METRICS',
         data: { value: 42 },
       });
 
@@ -159,29 +159,29 @@ describe("Integración de Componentes", () => {
 
       // Verificar métricas
       const metrics = await metricsCollector.getMetrics();
-      expect(metrics).toContain("process_total");
-      expect(metrics).toContain("process_active");
-      expect(metrics).toContain("process_completed");
+      expect(metrics).toContain('process_total');
+      expect(metrics).toContain('process_active');
+      expect(metrics).toContain('process_completed');
     });
   });
 
-  describe("Utilidades y Helpers", () => {
-    test("genera IDs únicos", () => {
+  describe('Utilidades y Helpers', () => {
+    test('genera IDs únicos', () => {
       const numIds = 1000;
       const ids = new Set();
 
       for (let i = 0; i < numIds; i++) {
-        ids.add(RandomHelper.generateProcessId("test-socket"));
+        ids.add(RandomHelper.generateProcessId('test-socket'));
       }
 
       expect(ids.size).toBe(numIds);
     });
 
-    test("valida acciones correctamente", () => {
+    test('valida acciones correctamente', () => {
       // Acción válida
       expect(
         queueManager.validateAction({
-          type: "TEST",
+          type: 'TEST',
           data: {},
         }),
       ).toBe(true);
@@ -189,7 +189,7 @@ describe("Integración de Componentes", () => {
       // Acciones inválidas
       expect(queueManager.validateAction(null)).toBe(false);
       expect(queueManager.validateAction({})).toBe(false);
-      expect(queueManager.validateAction({ type: "TEST" })).toBe(false);
+      expect(queueManager.validateAction({ type: 'TEST' })).toBe(false);
       expect(queueManager.validateAction({ data: {} })).toBe(false);
     });
   });

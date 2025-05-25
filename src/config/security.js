@@ -1,8 +1,8 @@
-const jwt = require("jsonwebtoken");
-const config = require("./config");
+const jwt = require('jsonwebtoken');
+const config = require('./config');
 
-const JWT_SECRET = process.env.JWT_SECRET || "tu-secreto-seguro-aqui";
-const TOKEN_EXPIRATION = "1h";
+const JWT_SECRET = process.env.JWT_SECRET || 'tu-secreto-seguro-aqui';
+const TOKEN_EXPIRATION = '1h';
 
 const generateToken = (userData) => {
   return jwt.sign(

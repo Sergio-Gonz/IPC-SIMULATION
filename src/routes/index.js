@@ -1,20 +1,20 @@
-const express = require("express");
-const prometheus = require("prom-client");
-const config = require("../config/config");
-const { checkSystemHealth } = require("../utils/systemHealth");
-const logger = require("../core/logger/logger");
+const express = require('express');
+const prometheus = require('prom-client');
+const config = require('../config/config');
+const { checkSystemHealth } = require('../utils/systemHealth');
+const logger = require('../core/logger/logger');
 
 const router = express.Router();
 
 // Ruta principal
-router.get("/", (req, res) => {
-  res.send("¡Bienvenido a la Simulación de IPC optimizada con RLS!");
+router.get('/', (req, res) => {
+  res.send('¡Bienvenido a la Simulación de IPC optimizada con RLS!');
 });
 
 // Ruta de métricas
-router.get("/metrics", async (req, res) => {
+router.get('/metrics', async (req, res) => {
   try {
-    res.set("Content-Type", prometheus.register.contentType);
+    res.set('Content-Type', prometheus.register.contentType);
     const metrics = await prometheus.register.metrics();
     res.end(metrics);
   } catch (error) {
@@ -24,7 +24,7 @@ router.get("/metrics", async (req, res) => {
 });
 
 // Ruta de estado
-router.get("/status", (req, res) => {
+router.get('/status', (req, res) => {
   const activeProcesses = req.app.locals.processManager.getActiveProcesses();
   const status = {
     activeProcesses: activeProcesses.length,
@@ -38,7 +38,7 @@ router.get("/status", (req, res) => {
 });
 
 // Ruta de salud
-router.get("/health", (req, res) => {
+router.get('/health', (req, res) => {
   const systemHealth = checkSystemHealth(
     req.app.locals.processManager,
     req.app.locals.io,
@@ -53,7 +53,7 @@ router.get("/health", (req, res) => {
       total: req.app.locals.io.sockets.sockets.size,
       byRole: Array.from(req.app.locals.io.sockets.sockets.values()).reduce(
         (acc, socket) => {
-          const role = socket.clientData?.role || "unknown";
+          const role = socket.clientData?.role || 'unknown';
           acc[role] = (acc[role] || 0) + 1;
           return acc;
         },
@@ -86,7 +86,7 @@ router.get("/health", (req, res) => {
 });
 
 // Ruta de estado detallado
-router.get("/status/detailed", async (req, res) => {
+router.get('/status/detailed', async (req, res) => {
   const activeProcesses = req.app.locals.processManager.getActiveProcesses();
   const detailedStatus = {
     system: {

@@ -1,18 +1,18 @@
-const fs = require("fs").promises;
-const path = require("path");
+const fs = require('fs').promises;
+const path = require('path');
 
 const IGNORE_PATTERNS = [
-  "node_modules",
-  ".git",
-  "dist",
-  "build",
-  "logs",
-  "*.log",
-  "*.md",
-  "package-lock.json",
+  'node_modules',
+  '.git',
+  'dist',
+  'build',
+  'logs',
+  '*.log',
+  '*.md',
+  'package-lock.json',
 ];
 
-const FILE_EXTENSIONS = [".js", ".ts", ".tsx"];
+const FILE_EXTENSIONS = ['.js', '.ts', '.tsx'];
 
 async function shouldProcessFile(filePath) {
   if (!FILE_EXTENSIONS.includes(path.extname(filePath))) {
@@ -20,8 +20,8 @@ async function shouldProcessFile(filePath) {
   }
 
   return !IGNORE_PATTERNS.some((pattern) => {
-    if (pattern.includes("*")) {
-      const regex = new RegExp(pattern.replace("*", ".*"));
+    if (pattern.includes('*')) {
+      const regex = new RegExp(pattern.replace('*', '.*'));
       return regex.test(filePath);
     }
     return filePath.includes(pattern);
@@ -30,37 +30,37 @@ async function shouldProcessFile(filePath) {
 
 function getRelativePath(fromPath, toPath) {
   let relativePath = path.relative(path.dirname(fromPath), toPath);
-  if (!relativePath.startsWith(".")) {
-    relativePath = "./" + relativePath;
+  if (!relativePath.startsWith('.')) {
+    relativePath = './' + relativePath;
   }
-  return relativePath.replace(/\\/g, "/");
+  return relativePath.replace(/\\/g, '/');
 }
 
 const IMPORT_MAP = {
-  "./config": "../config/config",
-  "./logger": "../core/logger/logger",
-  "./MetricsCollector": "../core/metrics/MetricsCollector",
-  "./ProcessManager": "../core/process/ProcessManager",
-  "./RandomHelper": "../core/utils/RandomHelper",
-  "./QueueManager": "../core/queue/QueueManager",
-  "./client": "../client/IPCClient",
-  "./simulateTraffic": "../simulator/simulateTraffic",
-  "./codeAudit": "../audit/codeAudit",
+  './config': '../config/config',
+  './logger': '../core/logger/logger',
+  './MetricsCollector': '../core/metrics/MetricsCollector',
+  './ProcessManager': '../core/process/ProcessManager',
+  './RandomHelper': '../core/utils/RandomHelper',
+  './QueueManager': '../core/queue/QueueManager',
+  './client': '../client/IPCClient',
+  './simulateTraffic': '../simulator/simulateTraffic',
+  './codeAudit': '../audit/codeAudit',
 };
 
 async function updateImports(filePath) {
   try {
-    const content = await fs.readFile(filePath, "utf8");
+    const content = await fs.readFile(filePath, 'utf8');
     let modified = false;
     let newContent = content;
 
     // Actualizar las importaciones
     Object.entries(IMPORT_MAP).forEach(([oldPath, newPath]) => {
-      const regex = new RegExp(`require\\(['"]${oldPath}['"]\\)`, "g");
+      const regex = new RegExp(`require\\(['"]${oldPath}['"]\\)`, 'g');
       if (regex.test(newContent)) {
         const relativePath = getRelativePath(
           filePath,
-          path.join(process.cwd(), "src", newPath),
+          path.join(process.cwd(), 'src', newPath),
         );
         newContent = newContent.replace(regex, `require('${relativePath}')`);
         modified = true;
@@ -105,10 +105,10 @@ async function walkDirectory(dir) {
 
 async function main() {
   try {
-    console.log("[INFO] Iniciando actualización de importaciones...");
+    console.log('[INFO] Iniciando actualización de importaciones...');
     const startTime = Date.now();
 
-    const srcDir = path.join(process.cwd(), "src");
+    const srcDir = path.join(process.cwd(), 'src');
     const updatedCount = await walkDirectory(srcDir);
 
     const duration = (Date.now() - startTime) / 1000;
@@ -116,7 +116,7 @@ async function main() {
       `[INFO] Actualización completada en ${duration}s. Archivos actualizados: ${updatedCount}`,
     );
   } catch (error) {
-    console.error("[ERROR] Error durante la actualización:", error);
+    console.error('[ERROR] Error durante la actualización:', error);
     process.exit(1);
   }
 }

@@ -1,80 +1,67 @@
-require("dotenv").config();
-const io = require("socket.io-client");
-const { createLogger } = require("../config/logging");
-const logger = createLogger("ipc-client");
-const config = require("../config/config");
+require('dotenv').config();
+const io = require('socket.io-client');
+const { createLogger } = require('../config/logging');
+const logger = createLogger('ipc-client');
+const config = require('../config/config');
 const {
   ROLES,
   PROCESS_TYPES,
   SIMULATION_CONFIG,
-} = require("../../config/config");
-const RandomHelper = require("../../core/utils/RandomHelper");
-const QueueManager = require("../../core/queue/QueueManager");
-const crypto = require("crypto");
+  PROCESS_STATES,
+} = require('../../config/config');
+const RandomHelper = require('../../core/utils/RandomHelper');
+const QueueManager = require('../../core/queue/QueueManager');
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
 class IPCClient {
-  constructor(config = {}) {
-    this.config = {
-      serverUrl: process.env.SERVER_URL || "http://localhost:3000",
-      role: config.role || "viewer",
-      reconnectInterval: {
-        min: 1000,
-        max: 5000,
-      },
-    };
-
-    this.socket = io(this.config.serverUrl, {
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
+  constructor(serverUrl, options = {}) {
+    this.id = uuidv4();
+    this.socket = io(serverUrl, {
       auth: {
-        token: this._generateAuthToken(),
-      },
+        token: options.token || 'default-token',
+        role: options.role || 'user'
+      }
     });
-
-    this.authenticated = false;
-    this.activeProcesses = new Map();
-    this.queueManager = new QueueManager(logger);
-    this.permissions = null;
-
-    this._setupEventHandlers();
+    this.processes = new Map();
+    this.setupEventHandlers();
   }
 
   _generateAuthToken() {
     // En un sistema real, esto vendría de un servicio de autenticación
     return crypto
-      .createHash("sha256")
+      .createHash('sha256')
       .update(`${this.config.role}-${Date.now()}`)
-      .digest("hex");
+      .digest('hex');
   }
 
   _setupEventHandlers() {
     // Conexión
-    this.socket.on("connect", () => {
-      logger.info("Conectando al servidor:", this.socket.id);
+    this.socket.on('connect', () => {
+      logger.info('Conectando al servidor:', this.socket.id);
       this._authenticate();
     });
 
     // Autenticación
-    this.socket.on("auth_response", (response) => {
-      if (response.status === "success") {
+    this.socket.on('auth_response', (response) => {
+      if (response.status === 'success') {
         this.authenticated = true;
         this.permissions = response.permissions;
         logger.info(`Autenticado como: ${this.config.role}`);
-        logger.debug("Permisos:", this.permissions);
+        logger.debug('Permisos:', this.permissions);
         this._startSimulation();
       } else {
-        logger.error("Error de autenticación:", response.mensaje);
+        logger.error('Error de autenticación:', response.mensaje);
       }
     });
 
     // Respuestas de acciones
-    this.socket.on("accion_respuesta", (response) => {
+    this.socket.on('accion_respuesta', (response) => {
       if (response.processId) {
         this.activeProcesses.delete(response.processId);
       }
 
-      if (response.status === "success") {
+      if (response.status === 'success') {
         logger.info(
           `Proceso ${response.processId} completado:`,
           response.resultado,
@@ -90,21 +77,21 @@ class IPCClient {
     });
 
     // Respuestas de interrupciones
-    this.socket.on("interrupcion_respuesta", (response) => {
-      logger.info("Respuesta de interrupción:", response.mensaje);
+    this.socket.on('interrupcion_respuesta', (response) => {
+      logger.info('Respuesta de interrupción:', response.mensaje);
     });
 
     // Desconexión
-    this.socket.on("disconnect", () => {
-      logger.warn("Desconectado del servidor");
+    this.socket.on('disconnect', () => {
+      logger.warn('Desconectado del servidor');
       this.authenticated = false;
       this.activeProcesses.clear();
       this.queueManager.clear();
     });
 
     // Errores de conexión
-    this.socket.on("connect_error", (error) => {
-      logger.error("Error de conexión:", error);
+    this.socket.on('connect_error', (error) => {
+      logger.error('Error de conexión:', error);
       if (!this.socket.connected) {
         this._scheduleReconnect();
       }
@@ -112,7 +99,7 @@ class IPCClient {
   }
 
   _authenticate() {
-    this.socket.emit("auth", {
+    this.socket.emit('auth', {
       role: this.config.role,
       token: this._generateAuthToken(),
     });
@@ -140,7 +127,9 @@ class IPCClient {
   }
 
   _scheduleNextInterruption() {
-    if (this.config.role !== ROLES.ADMIN) return;
+    if (this.config.role !== ROLES.ADMIN) {
+      return;
+    }
 
     const delay = RandomHelper.getRandomTime(5000, 15000);
     setTimeout(() => {
@@ -155,7 +144,7 @@ class IPCClient {
       SIMULATION_CONFIG.client.reconnectInterval.max,
     );
     setTimeout(() => {
-      logger.info("Intentando reconexión...");
+      logger.info('Intentando reconexión...');
       this.socket.connect();
     }, delay);
   }
@@ -185,13 +174,15 @@ class IPCClient {
     this.activeProcesses.set(processId, action);
 
     logger.info(`Iniciando ${action.type} de tipo ${action.processType}`);
-    this.socket.emit("accion", action);
+    this.socket.emit('accion', action);
 
     return processId;
   }
 
   _performRandomAction() {
-    if (!this.authenticated) return;
+    if (!this.authenticated) {
+      return;
+    }
 
     // Verificar límite de procesos concurrentes
     if (this.activeProcesses.size >= this.permissions?.maxConcurrentProcesses) {
@@ -207,7 +198,7 @@ class IPCClient {
       !actionType ||
       !this.hasPermission(actionType, processType)
     ) {
-      logger.warn("Acción aleatoria generada no válida o sin permisos");
+      logger.warn('Acción aleatoria generada no válida o sin permisos');
       return;
     }
 
@@ -216,12 +207,16 @@ class IPCClient {
   }
 
   _queueAction() {
-    if (!this.queueManager.canEnqueue()) return;
+    if (!this.queueManager.canEnqueue()) {
+      return;
+    }
 
     const processType = RandomHelper.getRandomProcessType(this.permissions);
     const actionType = RandomHelper.getRandomAction(this.permissions);
 
-    if (!processType || !actionType) return;
+    if (!processType || !actionType) {
+      return;
+    }
 
     const action = this._createAction(processType, actionType);
     this.queueManager.enqueue(action);
@@ -240,16 +235,22 @@ class IPCClient {
   }
 
   _performRandomInterruption() {
-    if (!this.authenticated || !this.permissions?.canInterrupt) return;
+    if (!this.authenticated || !this.permissions?.canInterrupt) {
+      return;
+    }
 
     const activeProcessIds = Array.from(this.activeProcesses.keys());
-    if (activeProcessIds.length === 0) return;
+    if (activeProcessIds.length === 0) {
+      return;
+    }
 
     const randomProcessId = RandomHelper.getRandomFromArray(activeProcessIds);
-    if (!randomProcessId) return;
+    if (!randomProcessId) {
+      return;
+    }
 
     logger.info(`Intentando interrumpir proceso: ${randomProcessId}`);
-    this.socket.emit("interrumpir", randomProcessId);
+    this.socket.emit('interrumpir', randomProcessId);
   }
 
   getStats() {

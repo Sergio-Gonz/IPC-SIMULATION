@@ -1,6 +1,6 @@
-const cluster = require("cluster");
-const os = require("os");
-const logger = require("../core/logger/logger");
+const cluster = require('cluster');
+const os = require('os');
+const logger = require('../core/logger/logger');
 
 class ClusterManager {
   constructor() {
@@ -70,13 +70,13 @@ class ClusterManager {
     }
 
     // Manejar salida de workers
-    cluster.on("exit", (worker, code, signal) => {
+    cluster.on('exit', (worker, code, signal) => {
       this.handleWorkerExit(worker, code, signal);
     });
 
     // Manejar mensajes de workers
-    cluster.on("message", (worker, message) => {
-      if (message.type === "status") {
+    cluster.on('message', (worker, message) => {
+      if (message.type === 'status') {
         this.updateWorkerStats(worker.id, {
           lastStatus: message.data,
         });
@@ -93,18 +93,18 @@ class ClusterManager {
     logger.info(`Worker ${process.pid} iniciando`);
 
     // Configurar manejo de señales
-    process.on("SIGTERM", () => {
+    process.on('SIGTERM', () => {
       logger.info(`Worker ${process.pid} recibió SIGTERM`);
       this.gracefulShutdown();
     });
 
-    process.on("SIGINT", () => {
+    process.on('SIGINT', () => {
       logger.info(`Worker ${process.pid} recibió SIGINT`);
       this.gracefulShutdown();
     });
 
     // Cargar la aplicación
-    require("./index");
+    require('./index');
   }
 
   gracefulShutdown() {
@@ -129,7 +129,7 @@ class ClusterManager {
     };
 
     logger.info({
-      message: "Estado del cluster",
+      message: 'Estado del cluster',
       status,
     });
   }

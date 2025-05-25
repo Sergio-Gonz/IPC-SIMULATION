@@ -1,7 +1,7 @@
-const config = require("../config/config");
-const logger = require("../core/logger/logger");
-const { verifyToken } = require("../config/security");
-const { authSchema, actionSchema } = require("../validation/schemas");
+const config = require('../config/config');
+const logger = require('../core/logger/logger');
+const { verifyToken } = require('../config/security');
+const { authSchema, actionSchema } = require('../validation/schemas');
 
 const socketRateLimiter = new Map();
 
@@ -31,10 +31,10 @@ const validateAuth = async (credentials) => {
     await authSchema.validateAsync(credentials);
     const tokenData = verifyToken(credentials.token);
     if (!tokenData) {
-      return { isValid: false, error: "Token inválido o expirado" };
+      return { isValid: false, error: 'Token inválido o expirado' };
     }
     if (tokenData.role !== credentials.role) {
-      return { isValid: false, error: "El rol no coincide con el token" };
+      return { isValid: false, error: 'El rol no coincide con el token' };
     }
     return { isValid: true, tokenData };
   } catch (error) {
@@ -53,7 +53,9 @@ const validateAction = async (action) => {
 
 const tienePermiso = (role, actionType, processType) => {
   const permisos = config.PERMISSIONS[role];
-  if (!permisos) return false;
+  if (!permisos) {
+    return false;
+  }
 
   return (
     permisos.actions.includes(actionType) &&
@@ -64,8 +66,8 @@ const tienePermiso = (role, actionType, processType) => {
 const checkConnectionLimit = (io, socket, next) => {
   const clientCount = io.sockets.sockets.size;
   if (clientCount >= config.SIMULATION_CONFIG.server.maxConnections) {
-    logger.warn("Servidor al límite de conexiones");
-    next(new Error("Servidor al límite de conexiones"));
+    logger.warn('Servidor al límite de conexiones');
+    next(new Error('Servidor al límite de conexiones'));
     return;
   }
   next();

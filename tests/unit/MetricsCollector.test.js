@@ -176,4 +176,4 @@ describe('MetricsCollector', () => {
       expect(metricsCollector.register).toBeDefined();
     });
   });
-}); 
+});

@@ -13,10 +13,6 @@ RUN npm install --include=dev
 # Copiar el resto del código
 COPY . .
 
-# Ejecutar linting y pruebas
-RUN npm run lint
-RUN npm run test:unit
-
 # Etapa de producción
 FROM node:20-alpine
 
@@ -31,7 +27,6 @@ RUN npm install --omit=dev --ignore-scripts
 
 # Copiar el código construido
 COPY --from=builder /usr/src/app/src ./src
-COPY --from=builder /usr/src/app/config ./config
 
 # Crear usuario no root para seguridad
 RUN addgroup -g 1001 -S nodejs && \

@@ -6,36 +6,36 @@
 
 // Tipos de acciones disponibles en el sistema
 const ACTION_TYPES = {
-  SOLICITUD: "solicitud",
-  ACTUALIZACION: "actualización",
-  CONSULTA: "consulta",
-  REPORTE: "reporte",
-  INTERRUMPIR: "interrumpir",
+  SOLICITUD: 'solicitud',
+  ACTUALIZACION: 'actualización',
+  CONSULTA: 'consulta',
+  REPORTE: 'reporte',
+  INTERRUMPIR: 'interrumpir',
 };
 
 // Roles del sistema y sus niveles de acceso
 const ROLES = {
-  ADMIN: "admin",
-  OPERATOR: "operator",
-  VIEWER: "viewer",
+  ADMIN: 'admin',
+  OPERATOR: 'operator',
+  VIEWER: 'viewer',
 };
 
 // Tipos de procesos que pueden ser ejecutados
 const PROCESS_TYPES = {
-  CALCULATION: "calculation",
-  DATABASE: "database",
-  FILE_OPERATION: "file_operation",
-  NETWORK: "network",
-  ANALYSIS: "analysis",
+  CALCULATION: 'calculation',
+  DATABASE: 'database',
+  FILE_OPERATION: 'file_operation',
+  NETWORK: 'network',
+  ANALYSIS: 'analysis',
 };
 
 // Estados posibles de los procesos
 const PROCESS_STATES = {
-  PENDING: "pending",
-  RUNNING: "running",
-  COMPLETED: "completed",
-  FAILED: "failed",
-  INTERRUPTED: "interrupted",
+  PENDING: 'pending',
+  RUNNING: 'running',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  INTERRUPTED: 'interrupted',
 };
 
 // Conjuntos comunes de acciones por nivel de acceso
@@ -88,7 +88,7 @@ const PERMISSIONS = {
 // Configuración de métricas para monitoreo
 const METRICS_CONFIG = {
   processTimeBuckets: [0.1, 0.5, 1, 2, 5, 10],
-  defaultLabels: ["role", "process_type", "status"],
+  defaultLabels: ['role', 'process_type', 'status'],
   collection_interval: parseInt(process.env.METRICS_INTERVAL) || 10000,
   retention_period: parseInt(process.env.METRICS_RETENTION) || 3600000, // 1 hora
 };
@@ -138,13 +138,13 @@ const SIMULATION_CONFIG = {
 const validateConfig = () => {
   // Validar umbrales
   if (SERVER_CONFIG.alertThresholds.memoryUsagePercent > 95) {
-    console.warn("ADVERTENCIA: Umbral de memoria muy alto (>95%)");
+    console.warn('ADVERTENCIA: Umbral de memoria muy alto (>95%)');
   }
 
   // Validar intervalos
   if (CLIENT_CONFIG.actionInterval.min > CLIENT_CONFIG.actionInterval.max) {
     throw new Error(
-      "Configuración inválida: actionInterval.min > actionInterval.max",
+      'Configuración inválida: actionInterval.min > actionInterval.max',
     );
   }
 

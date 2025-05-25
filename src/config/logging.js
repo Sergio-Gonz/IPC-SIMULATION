@@ -1,16 +1,16 @@
-const winston = require("winston");
-const path = require("path");
+const winston = require('winston');
+const path = require('path');
 
 const defaultLogConfig = {
   console: {
-    level: process.env.LOG_LEVEL || "info",
-    enabled: process.env.NODE_ENV !== "production",
+    level: process.env.LOG_LEVEL || 'info',
+    enabled: process.env.NODE_ENV !== 'production',
   },
   file: {
-    level: "info",
+    level: 'info',
     maxsize: 5242880, // 5MB
     maxFiles: 5,
-    dirname: "logs",
+    dirname: 'logs',
   },
 };
 
@@ -26,7 +26,7 @@ const createLogger = (serviceName, customConfig = {}) => {
   transports.push(
     new winston.transports.File({
       filename: path.join(config.file.dirname, `${serviceName}-error.log`),
-      level: "error",
+      level: 'error',
       maxsize: config.file.maxsize,
       maxFiles: config.file.maxFiles,
     }),
@@ -58,7 +58,7 @@ const createLogger = (serviceName, customConfig = {}) => {
     level: config.file.level,
     format: winston.format.combine(
       winston.format.timestamp({
-        format: "YYYY-MM-DD HH:mm:ss",
+        format: 'YYYY-MM-DD HH:mm:ss',
       }),
       winston.format.errors({ stack: true }),
       winston.format.splat(),
@@ -70,7 +70,7 @@ const createLogger = (serviceName, customConfig = {}) => {
 };
 
 // Asegurar que existe el directorio de logs
-const fs = require("fs");
+const fs = require('fs');
 const logDir = path.join(process.cwd(), defaultLogConfig.file.dirname);
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
